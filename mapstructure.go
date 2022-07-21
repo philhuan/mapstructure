@@ -168,6 +168,8 @@ import (
 	"strings"
 )
 
+var SquashTag = "squash"
+
 // DecodeHookFunc is the callback function that can be used for
 // data transformations. See "DecodeHook" in the DecoderConfig
 // struct.
@@ -307,6 +309,21 @@ func Decode(input interface{}, output interface{}) error {
 	config := &DecoderConfig{
 		Metadata: nil,
 		Result:   output,
+	}
+
+	decoder, err := NewDecoder(config)
+	if err != nil {
+		return err
+	}
+
+	return decoder.Decode(input)
+}
+
+func DecodeByJSON(input interface{}, output interface{}) error {
+	config := &DecoderConfig{
+		Metadata: nil,
+		Result:   output,
+		TagName:  "json",
 	}
 
 	decoder, err := NewDecoder(config)
@@ -945,7 +962,8 @@ func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val re
 			}
 
 			// If "squash" is specified in the tag, we squash the field down.
-			squash = squash || strings.Index(tagValue[index+1:], "squash") != -1
+
+			squash = squash || strings.Index(tagValue[index+1:], SquashTag) != -1
 			if squash {
 				// When squashing, the embedded type can be a pointer to a struct.
 				if v.Kind() == reflect.Ptr && v.Elem().Kind() == reflect.Struct {
@@ -1321,7 +1339,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 			// We always parse the tags cause we're looking for other tags too
 			tagParts := strings.Split(fieldType.Tag.Get(d.config.TagName), ",")
 			for _, tag := range tagParts[1:] {
-				if tag == "squash" {
+				if tag == SquashTag {
 					squash = true
 					break
 				}
