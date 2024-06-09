@@ -2779,6 +2779,48 @@ func TestDecoder_IgnoreUntaggedFields(t *testing.T) {
 	}
 }
 
+func TestAlternativeTags(t *testing.T) {
+	type Input struct {
+		A int    `json:"a" yaml:"aa"`
+		B int    `autoread:"b"`
+		C string `yaml:"c"`
+		D string
+	}
+	input := &Input{
+		A: 31,
+		B: 42,
+		C: "c",
+		D: "visible",
+	}
+
+	actual := make(map[string]interface{})
+	config := &DecoderConfig{
+		Result:               &actual,
+		IgnoreUntaggedFields: true,
+		AlternativeTags:      []string{"json", "yaml", "autoread"},
+	}
+
+	decoder, err := NewDecoder(config)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	err = decoder.Decode(input)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	expected := map[string]interface{}{
+		"a": 31,
+		"b": 42,
+		"c": "c",
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("Decode() expected: %#v\ngot: %#v", expected, actual)
+	}
+}
+
 func testSliceInput(t *testing.T, input map[string]interface{}, expected *Slice) {
 	var result Slice
 	err := Decode(input, &result)
