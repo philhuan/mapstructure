@@ -425,13 +425,13 @@ func NewDecoder(config *DecoderConfig) (*Decoder, error) {
 
 	config.tagValueGetter = func(field reflect.StructField) string {
 		v := field.Tag.Get(config.TagName)
-		if v != "" {
+		if v != "" && v != "-" {
 			return v
 		}
 
 		for _, tag := range config.AlternativeTags {
 			v = field.Tag.Get(tag)
-			if v != "" {
+			if v != "" && v != "-" {
 				return v
 			}
 		}
